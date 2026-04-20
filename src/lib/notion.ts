@@ -32,15 +32,37 @@ let cachedSchema: Record<string, string> | null = null;
 async function getDatabaseSchema(notion: Client, databaseId: string): Promise<Record<string, string>> {
   if (cachedSchema) return cachedSchema;
 
-  const db = await notion.databases.retrieve({ database_id: databaseId });
-  const props = (db as unknown as { properties: Record<string, { type: string }> }).properties;
-  
-  const schema: Record<string, string> = {};
-  for (const [name, prop] of Object.entries(props)) {
-    schema[name] = prop.type;
+  try {
+    const db = await notion.databases.retrieve({ database_id: databaseId });
+    const props = (db as unknown as { properties?: Record<string, { type: string }> | null }).properties;
+    
+    if (!props || typeof props !== 'object') {
+      console.warn('Notion database returned no properties — using minimal schema');
+      // Return a minimal schema with just a title property
+      cachedSchema = { 'Name': 'title' };
+      return cachedSchema;
+    }
+
+    const schema: Record<string, string> = {};
+    for (const [name, prop] of Object.entries(props)) {
+      if (prop && prop.type) {
+        schema[name] = prop.type;
+      }
+    }
+    
+    // Ensure we have at least a title property
+    if (!Object.values(schema).includes('title')) {
+      schema['Name'] = 'title';
+    }
+    
+    cachedSchema = schema;
+    return schema;
+  } catch (error) {
+    console.error('Failed to retrieve database schema:', error);
+    // Return minimal fallback schema so saving can still attempt to work
+    cachedSchema = { 'Name': 'title' };
+    return cachedSchema;
   }
-  cachedSchema = schema;
-  return schema;
 }
 
 /**

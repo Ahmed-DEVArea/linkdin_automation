@@ -67,11 +67,47 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const result = await generateImage({
-      prompt: sceneDescription,
-      style: body.style || 'realistic',
-      characterId: body.characterId,
-    });
+    let result;
+    try {
+      result = await generateImage({
+        prompt: sceneDescription,
+        style: body.style || 'realistic',
+        characterId: body.characterId,
+      });
+    } catch (imgError) {
+      const errMsg = imgError instanceof Error ? imgError.message : 'Unknown error';
+      console.error('Error generating image:', imgError);
+
+      // Handle specific Higgsfield errors with clear messages
+      if (errMsg.includes('Not enough credits') || errMsg.includes('403')) {
+        return NextResponse.json(
+          {
+            error: 'Higgsfield account has run out of credits. Please top up your credits at https://platform.higgsfield.ai or use a different image generation approach.',
+            details: errMsg,
+            code: 'NO_CREDITS',
+          },
+          { status: 402 }
+        );
+      }
+      if (errMsg.includes('401') || errMsg.includes('Unauthorized') || errMsg.includes('Authentication')) {
+        return NextResponse.json(
+          {
+            error: 'Higgsfield API keys are invalid or expired. Please check your HIGGSFIELD_API_KEY_ID and HIGGSFIELD_API_KEY_SECRET.',
+            details: errMsg,
+            code: 'AUTH_ERROR',
+          },
+          { status: 401 }
+        );
+      }
+
+      return NextResponse.json(
+        {
+          error: 'Failed to generate image',
+          details: errMsg,
+        },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       imageUrl: result.imageUrl,
@@ -79,10 +115,10 @@ export async function POST(request: NextRequest) {
       sceneDescription,
     });
   } catch (error) {
-    console.error('Error generating image:', error);
+    console.error('Error in image route:', error);
     return NextResponse.json(
       {
-        error: 'Failed to generate image',
+        error: 'Failed to process image request',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }

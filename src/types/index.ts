@@ -69,6 +69,7 @@ export interface GenerateIdeasRequest {
   topic: string;
   count?: number;
   provider?: LLMProvider;
+  demo?: boolean;
 }
 
 export interface GenerateIdeasResponse {
@@ -79,6 +80,7 @@ export interface GeneratePostRequest {
   idea: ContentIdea;
   provider?: LLMProvider;
   customInstructions?: string;
+  demo?: boolean;
 }
 
 export interface GeneratePostResponse {
@@ -89,6 +91,7 @@ export interface GenerateCarouselRequest {
   post: LinkedInPost;
   slideCount?: number;
   provider?: LLMProvider;
+  demo?: boolean;
 }
 
 export interface GenerateCarouselResponse {

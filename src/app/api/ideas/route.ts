@@ -5,7 +5,17 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { generateIdeas } from '@/lib/content';
+import { getMockIdeas } from '@/lib/mock-data';
 import type { GenerateIdeasRequest } from '@/types';
+
+function hasApiKey(provider: string): boolean {
+  switch (provider) {
+    case 'claude': return !!process.env.ANTHROPIC_API_KEY;
+    case 'openai': return !!process.env.OPENAI_API_KEY;
+    case 'gemini': return !!process.env.GEMINI_API_KEY;
+    default: return false;
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,10 +28,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const provider = body.provider || 'gemini';
+    const isDemo = body.demo === true || !hasApiKey(provider);
+
+    if (isDemo) {
+      // Demo mode — return mock data with slight delay for realism
+      await new Promise((r) => setTimeout(r, 1200));
+      const ideas = getMockIdeas(body.topic.trim());
+      return NextResponse.json({ ideas, demo: true });
+    }
+
     const ideas = await generateIdeas(
       body.topic.trim(),
       body.count || 5,
-      body.provider || 'claude'
+      provider
     );
 
     return NextResponse.json({ ideas });

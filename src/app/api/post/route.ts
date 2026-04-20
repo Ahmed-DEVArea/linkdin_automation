@@ -5,7 +5,17 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { generatePost, refinePost } from '@/lib/content';
+import { getMockPost } from '@/lib/mock-data';
 import type { GeneratePostRequest } from '@/types';
+
+function hasApiKey(provider: string): boolean {
+  switch (provider) {
+    case 'claude': return !!process.env.ANTHROPIC_API_KEY;
+    case 'openai': return !!process.env.OPENAI_API_KEY;
+    case 'gemini': return !!process.env.GEMINI_API_KEY;
+    default: return false;
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,9 +28,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const provider = body.provider || 'gemini';
+    const isDemo = body.demo === true || !hasApiKey(provider);
+
+    if (isDemo) {
+      await new Promise((r) => setTimeout(r, 1500));
+      const post = getMockPost(body.idea);
+      return NextResponse.json({ post, demo: true });
+    }
+
     const post = await generatePost(
       body.idea,
-      body.provider || 'claude',
+      provider,
       body.customInstructions
     );
 
@@ -49,10 +68,21 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    const provider = body.provider || 'gemini';
+    const isDemo = body.demo === true || !hasApiKey(provider);
+
+    if (isDemo) {
+      await new Promise((r) => setTimeout(r, 1000));
+      // In demo mode, slightly modify the content
+      const lines = body.content.split('\n');
+      const shuffled = [lines[0], '', 'Here\'s what most people miss:', '', ...lines.slice(1)];
+      return NextResponse.json({ content: shuffled.join('\n'), demo: true });
+    }
+
     const refined = await refinePost(
       body.content,
       body.instructions || '',
-      body.provider || 'claude'
+      provider
     );
 
     return NextResponse.json({ content: refined });

@@ -30,7 +30,7 @@ export const useAppStore = create<AppState>((set) => ({
     })),
 
   // Settings
-  llmProvider: 'claude',
+  llmProvider: 'gemini',
   setLLMProvider: (provider: LLMProvider) => set({ llmProvider: provider }),
 
   // Loading states

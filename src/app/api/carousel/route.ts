@@ -5,7 +5,17 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { generateCarousel } from '@/lib/carousel';
+import { getMockCarousel } from '@/lib/mock-data';
 import type { GenerateCarouselRequest } from '@/types';
+
+function hasApiKey(provider: string): boolean {
+  switch (provider) {
+    case 'claude': return !!process.env.ANTHROPIC_API_KEY;
+    case 'openai': return !!process.env.OPENAI_API_KEY;
+    case 'gemini': return !!process.env.GEMINI_API_KEY;
+    default: return false;
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,11 +28,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const provider = body.provider || 'gemini';
+    const isDemo = body.demo === true || !hasApiKey(provider);
+
+    if (isDemo) {
+      await new Promise((r) => setTimeout(r, 1800));
+      const carousel = getMockCarousel(body.post.topic, body.post.content);
+      return NextResponse.json({ carousel, demo: true });
+    }
+
     const carousel = await generateCarousel(
       body.post.topic,
       body.post.content,
       body.slideCount || 8,
-      body.provider || 'claude'
+      provider
     );
 
     return NextResponse.json({ carousel });

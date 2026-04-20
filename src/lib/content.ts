@@ -14,7 +14,8 @@ import type { ContentIdea, LinkedInPost, LLMProvider } from '@/types';
 export async function generateIdeas(
   topic: string,
   count: number = 5,
-  provider: LLMProvider = 'claude'
+  provider: LLMProvider = 'claude',
+  apiKey?: string
 ): Promise<ContentIdea[]> {
   const prompt = IDEA_GENERATION_PROMPT
     .replace('{topic}', topic)
@@ -25,6 +26,7 @@ export async function generateIdeas(
     prompt,
     systemPrompt: 'You are a LinkedIn content strategist. Return ONLY valid JSON.',
     temperature: 0.8,
+    apiKey,
   });
 
   const data = extractJSON<{ ideas: ContentIdea[] }>(response);
@@ -39,7 +41,8 @@ export async function generateIdeas(
 export async function generatePost(
   idea: ContentIdea,
   provider: LLMProvider = 'claude',
-  customInstructions?: string
+  customInstructions?: string,
+  apiKey?: string
 ): Promise<LinkedInPost> {
   const prompt = POST_GENERATION_PROMPT
     .replace('{title}', idea.title)
@@ -54,6 +57,7 @@ export async function generatePost(
     systemPrompt:
       'You are a LinkedIn ghostwriter. Write raw, authentic posts. Return ONLY the post text.',
     temperature: 0.7,
+    apiKey,
   });
 
   return {
@@ -69,7 +73,8 @@ export async function generatePost(
 export async function refinePost(
   content: string,
   instructions: string = '',
-  provider: LLMProvider = 'claude'
+  provider: LLMProvider = 'claude',
+  apiKey?: string
 ): Promise<string> {
   const prompt = REFINE_POST_PROMPT
     .replace('{content}', content)
@@ -81,6 +86,7 @@ export async function refinePost(
     systemPrompt:
       'You are a LinkedIn post editor. Return ONLY the refined post text.',
     temperature: 0.6,
+    apiKey,
   });
 
   return refined.trim();
@@ -88,7 +94,8 @@ export async function refinePost(
 
 export async function generateSceneDescription(
   postContent: string,
-  provider: LLMProvider = 'claude'
+  provider: LLMProvider = 'claude',
+  apiKey?: string
 ): Promise<string> {
   const prompt = IMAGE_SCENE_PROMPT.replace('{content}', postContent);
 
@@ -99,6 +106,7 @@ export async function generateSceneDescription(
       'You are an image prompt engineer. Return ONLY a concise scene description.',
     temperature: 0.7,
     maxTokens: 256,
+    apiKey,
   });
 
   return scene.trim();

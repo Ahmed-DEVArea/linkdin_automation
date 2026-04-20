@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { ArrowLeft, ArrowRight, Lightbulb } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
+import { getApiKeyForProvider } from '@/lib/client-utils';
 
 export function IdeasList() {
   const {
@@ -17,6 +18,7 @@ export function IdeasList() {
     setCurrentPost,
     setLoading,
     llmProvider,
+    apiKeys,
   } = useAppStore();
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [error, setError] = useState('');
@@ -33,6 +35,7 @@ export function IdeasList() {
         body: JSON.stringify({
           idea,
           provider: llmProvider,
+          apiKey: getApiKeyForProvider(llmProvider, apiKeys),
         }),
       });
 

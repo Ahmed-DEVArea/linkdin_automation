@@ -3,9 +3,30 @@
 // ============================================
 
 import { create } from 'zustand';
-import type { AppState, ContentIdea, LinkedInPost, LLMProvider } from '@/types';
+import type { AppState, ContentIdea, LinkedInPost, LLMProvider, UserApiKeys } from '@/types';
 
-export const useAppStore = create<AppState>((set) => ({
+// Load API keys from localStorage
+function loadApiKeys(): UserApiKeys {
+  if (typeof window === 'undefined') return {};
+  try {
+    const stored = localStorage.getItem('content-engine-api-keys');
+    return stored ? JSON.parse(stored) : {};
+  } catch {
+    return {};
+  }
+}
+
+// Save API keys to localStorage
+function saveApiKeys(keys: UserApiKeys) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem('content-engine-api-keys', JSON.stringify(keys));
+  } catch {
+    // silently fail
+  }
+}
+
+export const useAppStore = create<AppState>((set, get) => ({
   // Workflow step
   step: 'input',
 
@@ -30,8 +51,20 @@ export const useAppStore = create<AppState>((set) => ({
     })),
 
   // Settings
-  llmProvider: 'gemini',
+  llmProvider: 'kimi',
   setLLMProvider: (provider: LLMProvider) => set({ llmProvider: provider }),
+
+  // API Keys
+  apiKeys: loadApiKeys(),
+  setApiKey: (provider: keyof UserApiKeys, key: string) => {
+    const newKeys = { ...get().apiKeys, [provider]: key || undefined };
+    saveApiKeys(newKeys);
+    set({ apiKeys: newKeys });
+  },
+
+  // Settings modal
+  showSettings: false,
+  setShowSettings: (show: boolean) => set({ showSettings: show }),
 
   // Loading states
   isGeneratingIdeas: false,

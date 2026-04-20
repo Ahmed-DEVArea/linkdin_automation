@@ -10,7 +10,8 @@ export async function generateCarousel(
   topic: string,
   content: string,
   slideCount: number = 8,
-  provider: LLMProvider = 'claude'
+  provider: LLMProvider = 'claude',
+  apiKey?: string
 ): Promise<CarouselData> {
   const prompt = CAROUSEL_GENERATION_PROMPT
     .replace('{topic}', topic)
@@ -23,6 +24,7 @@ export async function generateCarousel(
     systemPrompt:
       'You are a carousel content designer. Return ONLY valid JSON.',
     temperature: 0.6,
+    apiKey,
   });
 
   const data = extractJSON<{ title: string; slides: CarouselSlide[] }>(response);

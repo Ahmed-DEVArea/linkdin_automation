@@ -2,13 +2,21 @@
 // LinkedIn Automation - Core Types
 // ============================================
 
-export type LLMProvider = 'claude' | 'openai' | 'gemini';
+export type LLMProvider = 'claude' | 'openai' | 'gemini' | 'kimi';
 
 export interface LLMConfig {
   provider: LLMProvider;
   model?: string;
   temperature?: number;
   maxTokens?: number;
+}
+
+// User-provided API keys (stored client-side in localStorage)
+export interface UserApiKeys {
+  anthropic?: string;
+  openai?: string;
+  gemini?: string;
+  kimi?: string;
 }
 
 export interface ContentIdea {
@@ -70,6 +78,7 @@ export interface GenerateIdeasRequest {
   count?: number;
   provider?: LLMProvider;
   demo?: boolean;
+  apiKey?: string;
 }
 
 export interface GenerateIdeasResponse {
@@ -81,6 +90,7 @@ export interface GeneratePostRequest {
   provider?: LLMProvider;
   customInstructions?: string;
   demo?: boolean;
+  apiKey?: string;
 }
 
 export interface GeneratePostResponse {
@@ -92,6 +102,7 @@ export interface GenerateCarouselRequest {
   slideCount?: number;
   provider?: LLMProvider;
   demo?: boolean;
+  apiKey?: string;
 }
 
 export interface GenerateCarouselResponse {
@@ -140,6 +151,14 @@ export interface AppState {
   // Settings
   llmProvider: LLMProvider;
   setLLMProvider: (provider: LLMProvider) => void;
+  
+  // API Keys (user-provided, stored in localStorage)
+  apiKeys: UserApiKeys;
+  setApiKey: (provider: keyof UserApiKeys, key: string) => void;
+  
+  // Settings modal
+  showSettings: boolean;
+  setShowSettings: (show: boolean) => void;
   
   // Loading states
   isGeneratingIdeas: boolean;

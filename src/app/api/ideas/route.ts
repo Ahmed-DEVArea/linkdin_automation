@@ -8,11 +8,13 @@ import { generateIdeas } from '@/lib/content';
 import { getMockIdeas } from '@/lib/mock-data';
 import type { GenerateIdeasRequest } from '@/types';
 
-function hasApiKey(provider: string): boolean {
+function hasApiKey(provider: string, userKey?: string): boolean {
+  if (userKey) return true;
   switch (provider) {
     case 'claude': return !!process.env.ANTHROPIC_API_KEY;
     case 'openai': return !!process.env.OPENAI_API_KEY;
     case 'gemini': return !!process.env.GEMINI_API_KEY;
+    case 'kimi':   return !!process.env.KIMI_API_KEY;
     default: return false;
   }
 }
@@ -28,11 +30,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const provider = body.provider || 'gemini';
-    const isDemo = body.demo === true || !hasApiKey(provider);
+    const provider = body.provider || 'kimi';
+    const userKey = body.apiKey;
+    const isDemo = body.demo === true || !hasApiKey(provider, userKey);
 
     if (isDemo) {
-      // Demo mode — return mock data with slight delay for realism
       await new Promise((r) => setTimeout(r, 1200));
       const ideas = getMockIdeas(body.topic.trim());
       return NextResponse.json({ ideas, demo: true });
@@ -41,7 +43,8 @@ export async function POST(request: NextRequest) {
     const ideas = await generateIdeas(
       body.topic.trim(),
       body.count || 5,
-      provider
+      provider,
+      userKey
     );
 
     return NextResponse.json({ ideas });

@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
   try {
     if (!isHiggsFieldConfigured()) {
       return NextResponse.json(
-        { error: 'Higgsfield API is not configured. Add HIGGSFIELD_API_KEY_ID and HIGGSFIELD_API_KEY_SECRET to .env.local' },
+        { error: 'Higgsfield API is not configured. Add HIGGSFIELD_API_KEY_ID and HIGGSFIELD_API_KEY_SECRET to your environment or Settings.' },
         { status: 400 }
       );
     }
@@ -30,7 +30,8 @@ export async function POST(request: NextRequest) {
     if (!sceneDescription) {
       sceneDescription = await generateSceneDescription(
         body.postContent,
-        body.provider || 'claude'
+        body.provider || 'kimi',
+        body.apiKey
       );
     }
 

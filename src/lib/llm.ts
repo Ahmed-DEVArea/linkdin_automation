@@ -1,6 +1,6 @@
 // ============================================
 // LLM Service — Multi-provider AI abstraction
-// Supports: Claude, OpenAI, Google Gemini
+// Supports: Claude, OpenAI, Google Gemini, Kimi K2.5
 // ============================================
 
 import Anthropic from '@anthropic-ai/sdk';
@@ -14,38 +14,35 @@ interface LLMCallOptions {
   systemPrompt?: string;
   temperature?: number;
   maxTokens?: number;
+  apiKey?: string; // User-provided API key (overrides env var)
 }
 
-// Initialize clients lazily
-let anthropicClient: Anthropic | null = null;
-let openaiClient: OpenAI | null = null;
-let geminiClient: GoogleGenerativeAI | null = null;
-
-function getAnthropicClient(): Anthropic {
-  if (!anthropicClient) {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) throw new Error('ANTHROPIC_API_KEY is not set');
-    anthropicClient = new Anthropic({ apiKey });
-  }
-  return anthropicClient;
+// Create clients with the given API key (no caching when user-provided)
+function createAnthropicClient(apiKey?: string): Anthropic {
+  const key = apiKey || process.env.ANTHROPIC_API_KEY;
+  if (!key) throw new Error('Anthropic API key is not set. Add it in Settings.');
+  return new Anthropic({ apiKey: key });
 }
 
-function getOpenAIClient(): OpenAI {
-  if (!openaiClient) {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) throw new Error('OPENAI_API_KEY is not set');
-    openaiClient = new OpenAI({ apiKey });
-  }
-  return openaiClient;
+function createOpenAIClient(apiKey?: string): OpenAI {
+  const key = apiKey || process.env.OPENAI_API_KEY;
+  if (!key) throw new Error('OpenAI API key is not set. Add it in Settings.');
+  return new OpenAI({ apiKey: key });
 }
 
-function getGeminiClient(): GoogleGenerativeAI {
-  if (!geminiClient) {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) throw new Error('GEMINI_API_KEY is not set');
-    geminiClient = new GoogleGenerativeAI(apiKey);
-  }
-  return geminiClient;
+function createGeminiClient(apiKey?: string): GoogleGenerativeAI {
+  const key = apiKey || process.env.GEMINI_API_KEY;
+  if (!key) throw new Error('Gemini API key is not set. Add it in Settings.');
+  return new GoogleGenerativeAI(key);
+}
+
+function createKimiClient(apiKey?: string): OpenAI {
+  const key = apiKey || process.env.KIMI_API_KEY;
+  if (!key) throw new Error('Kimi API key is not set. Add it in Settings.');
+  return new OpenAI({
+    apiKey: key,
+    baseURL: 'https://api.moonshot.cn/v1',
+  });
 }
 
 export async function callLLM(options: LLMCallOptions): Promise<string> {
@@ -55,15 +52,18 @@ export async function callLLM(options: LLMCallOptions): Promise<string> {
     systemPrompt = 'You are a helpful assistant.',
     temperature = 0.7,
     maxTokens = 4096,
+    apiKey,
   } = options;
 
   switch (provider) {
     case 'claude':
-      return callClaude(prompt, systemPrompt, temperature, maxTokens);
+      return callClaude(prompt, systemPrompt, temperature, maxTokens, apiKey);
     case 'openai':
-      return callOpenAI(prompt, systemPrompt, temperature, maxTokens);
+      return callOpenAI(prompt, systemPrompt, temperature, maxTokens, apiKey);
     case 'gemini':
-      return callGemini(prompt, systemPrompt, temperature, maxTokens);
+      return callGemini(prompt, systemPrompt, temperature, maxTokens, apiKey);
+    case 'kimi':
+      return callKimi(prompt, systemPrompt, temperature, maxTokens, apiKey);
     default:
       throw new Error(`Unsupported LLM provider: ${provider}`);
   }
@@ -73,9 +73,10 @@ async function callClaude(
   prompt: string,
   systemPrompt: string,
   temperature: number,
-  maxTokens: number
+  maxTokens: number,
+  apiKey?: string
 ): Promise<string> {
-  const client = getAnthropicClient();
+  const client = createAnthropicClient(apiKey);
 
   const response = await client.messages.create({
     model: process.env.CLAUDE_MODEL || 'claude-sonnet-4-20250514',
@@ -96,9 +97,10 @@ async function callOpenAI(
   prompt: string,
   systemPrompt: string,
   temperature: number,
-  maxTokens: number
+  maxTokens: number,
+  apiKey?: string
 ): Promise<string> {
-  const client = getOpenAIClient();
+  const client = createOpenAIClient(apiKey);
 
   const response = await client.chat.completions.create({
     model: process.env.OPENAI_MODEL || 'gpt-4o',
@@ -121,9 +123,10 @@ async function callGemini(
   prompt: string,
   systemPrompt: string,
   temperature: number,
-  maxTokens: number
+  maxTokens: number,
+  apiKey?: string
 ): Promise<string> {
-  const client = getGeminiClient();
+  const client = createGeminiClient(apiKey);
   const model = client.getGenerativeModel({
     model: process.env.GEMINI_MODEL || 'gemini-2.0-flash',
     systemInstruction: systemPrompt,
@@ -139,6 +142,32 @@ async function callGemini(
     throw new Error('No response from Gemini');
   }
   return text;
+}
+
+async function callKimi(
+  prompt: string,
+  systemPrompt: string,
+  temperature: number,
+  maxTokens: number,
+  apiKey?: string
+): Promise<string> {
+  const client = createKimiClient(apiKey);
+
+  const response = await client.chat.completions.create({
+    model: process.env.KIMI_MODEL || 'kimi-k2-0520',
+    temperature,
+    max_tokens: maxTokens,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: prompt },
+    ],
+  });
+
+  const content = response.choices[0]?.message?.content;
+  if (!content) {
+    throw new Error('No response from Kimi K2.5');
+  }
+  return content;
 }
 
 // Extract JSON from LLM response (handles markdown code blocks)

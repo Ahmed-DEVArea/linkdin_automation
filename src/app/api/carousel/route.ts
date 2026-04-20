@@ -8,11 +8,13 @@ import { generateCarousel } from '@/lib/carousel';
 import { getMockCarousel } from '@/lib/mock-data';
 import type { GenerateCarouselRequest } from '@/types';
 
-function hasApiKey(provider: string): boolean {
+function hasApiKey(provider: string, userKey?: string): boolean {
+  if (userKey) return true;
   switch (provider) {
     case 'claude': return !!process.env.ANTHROPIC_API_KEY;
     case 'openai': return !!process.env.OPENAI_API_KEY;
     case 'gemini': return !!process.env.GEMINI_API_KEY;
+    case 'kimi':   return !!process.env.KIMI_API_KEY;
     default: return false;
   }
 }
@@ -28,8 +30,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const provider = body.provider || 'gemini';
-    const isDemo = body.demo === true || !hasApiKey(provider);
+    const provider = body.provider || 'kimi';
+    const userKey = body.apiKey;
+    const isDemo = body.demo === true || !hasApiKey(provider, userKey);
 
     if (isDemo) {
       await new Promise((r) => setTimeout(r, 1800));
@@ -41,7 +44,8 @@ export async function POST(request: NextRequest) {
       body.post.topic,
       body.post.content,
       body.slideCount || 8,
-      provider
+      provider,
+      userKey
     );
 
     return NextResponse.json({ carousel });

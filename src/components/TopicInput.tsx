@@ -8,9 +8,10 @@ import { useState } from 'react';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { ProviderSwitch } from './ProviderSwitch';
+import { getApiKeyForProvider } from '@/lib/client-utils';
 
 export function TopicInput() {
-  const { topic, setTopic, setIdeas, setStep, setLoading, llmProvider } =
+  const { topic, setTopic, setIdeas, setStep, setLoading, llmProvider, apiKeys } =
     useAppStore();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -30,6 +31,7 @@ export function TopicInput() {
           topic: topic.trim(),
           count: 5,
           provider: llmProvider,
+          apiKey: getApiKeyForProvider(llmProvider, apiKeys),
         }),
       });
 

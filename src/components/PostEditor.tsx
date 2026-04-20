@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { CarouselPreview } from './CarouselPreview';
+import { getApiKeyForProvider } from '@/lib/client-utils';
 
 export function PostEditor() {
   const {
@@ -26,6 +27,7 @@ export function PostEditor() {
     setCurrentPost,
     setStep,
     llmProvider,
+    apiKeys,
   } = useAppStore();
 
   const [isRegenerating, setIsRegenerating] = useState(false);
@@ -49,6 +51,7 @@ export function PostEditor() {
         body: JSON.stringify({
           content: currentPost.content,
           provider: llmProvider,
+          apiKey: getApiKeyForProvider(llmProvider, apiKeys),
         }),
       });
 
@@ -74,6 +77,7 @@ export function PostEditor() {
           post: currentPost,
           slideCount: 8,
           provider: llmProvider,
+          apiKey: getApiKeyForProvider(llmProvider, apiKeys),
         }),
       });
 
@@ -104,6 +108,7 @@ export function PostEditor() {
         body: JSON.stringify({
           postContent: currentPost.content,
           provider: llmProvider,
+          apiKey: getApiKeyForProvider(llmProvider, apiKeys),
         }),
       });
 

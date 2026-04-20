@@ -7,8 +7,24 @@ import { NextRequest, NextResponse } from 'next/server';
 import { saveToNotion, verifyNotionConnection } from '@/lib/notion';
 import type { SaveToNotionRequest } from '@/types';
 
+function isNotionConfigured(): boolean {
+  return !!(process.env.NOTION_API_KEY && process.env.NOTION_DATABASE_ID);
+}
+
 export async function POST(request: NextRequest) {
   try {
+    if (!isNotionConfigured()) {
+      const missing: string[] = [];
+      if (!process.env.NOTION_API_KEY) missing.push('NOTION_API_KEY');
+      if (!process.env.NOTION_DATABASE_ID) missing.push('NOTION_DATABASE_ID');
+      return NextResponse.json(
+        {
+          error: `Notion is not configured. Missing: ${missing.join(', ')}. Add them to your Vercel environment variables.`,
+        },
+        { status: 400 }
+      );
+    }
+
     const body: SaveToNotionRequest = await request.json();
 
     if (!body.post) {

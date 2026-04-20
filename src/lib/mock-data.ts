@@ -1,6 +1,8 @@
 // ============================================
 // Mock Data — Demo mode for UI testing
 // Returns realistic data without needing API keys
+// Matches Adit's voice: raw, human, anti-AI, practical
+// Structure: Hook → Story/Problem → Solution → CTA
 // ============================================
 
 import type { ContentIdea, LinkedInPost, CarouselData } from '@/types';
@@ -12,50 +14,50 @@ export function getMockIdeas(topic: string): ContentIdea[] {
       title: `The uncomfortable truth about ${topic}`,
       description: `A raw, personal take on how ${topic} is changing the game — and why most people are thinking about it wrong.`,
       angle: 'contrarian',
-      hook: `Everyone's talking about ${topic}.\n\nBut nobody's saying what actually needs to be said.`,
+      hook: `97% of people get ${topic} wrong.\n\nI was one of them until 8 months ago.`,
     },
     {
       id: '2',
-      title: `I spent 6 months studying ${topic}. Here's what I learned.`,
+      title: `I spent 6 months studying ${topic}. Here's what nobody told me.`,
       description: `Deep-dive insights from real experience — practical lessons most content skips over.`,
       angle: 'personal experience',
-      hook: `6 months ago, I thought I understood ${topic}.\n\nI was wrong. Here's what changed.`,
+      hook: `6 months. 47 conversations. 1 painful truth about ${topic}.\n\nNobody warned me about this.`,
     },
     {
       id: '3',
-      title: `${topic}: The 5 things nobody tells you`,
+      title: `${topic} is broken. Here's what actually works.`,
       description: `Cutting through the noise with actionable truths about ${topic} that most "gurus" won't share.`,
-      angle: 'listicle / myth-busting',
-      hook: `Everyone has opinions about ${topic}.\n\nBut here are the 5 things that actually matter:`,
+      angle: 'problem-solution',
+      hook: `I watched 3 businesses fail at ${topic} this year.\n\nAll 3 made the same mistake.`,
     },
     {
       id: '4',
       title: `Why ${topic} will look completely different in 2 years`,
       description: `A forward-looking analysis of where ${topic} is headed — based on patterns most people miss.`,
       angle: 'future prediction',
-      hook: `Mark my words.\n\nIn 2 years, ${topic} won't look anything like it does today.\n\nHere's why:`,
+      hook: `In 18 months, half the people doing ${topic} will be irrelevant.\n\nNot because they're bad at it.`,
     },
     {
       id: '5',
-      title: `My biggest mistake with ${topic} (and what it taught me)`,
-      description: `A vulnerable story about failing, learning, and coming back stronger — relatable and authentic.`,
+      title: `My $12,000 mistake with ${topic}`,
+      description: `A vulnerable story about a real financial loss, what went wrong, and the lesson that made it worth it.`,
       angle: 'vulnerability / story',
-      hook: `I need to tell you about my biggest failure.\n\nIt involves ${topic}.\nAnd it changed everything.`,
+      hook: `I lost $12,000 on a single ${topic} decision.\n\nWorst part? I saw it coming.`,
     },
   ];
 }
 
 export function getMockPost(idea: ContentIdea): LinkedInPost {
   const posts: Record<string, string> = {
-    contrarian: `Everyone's talking about ${idea.title.replace('The uncomfortable truth about ', '')}.\n\nBut nobody's saying what actually needs to be said.\n\nHere's the thing:\n\nThe people who are loudest about this topic?\nThey've never actually done the work.\n\nI've been in the trenches.\nI've seen what happens behind the scenes.\n\nAnd I can tell you —\nThe real story is very different from the narrative.\n\n3 things I've learned:\n\n1. It's not about having all the answers.\nIt's about asking better questions.\n\n2. The "overnight success" stories?\nYears of invisible work.\n\n3. The biggest breakthroughs come from\nthe moments that feel like failures.\n\nStop consuming content about this.\nStart doing the work.\n\nThe gap between knowing and doing\nis where everything happens.\n\n—\n\nAgree? Disagree?\nI'd love to hear your take. 👇`,
+    contrarian: `97% of people get ${idea.title.replace('The uncomfortable truth about ', '')} wrong.\n\nI was one of them until 8 months ago.\n\nI was doing everything the "experts" told me to.\nFollowing the playbook.\nCopying what worked for others.\n\nResults? Nothing.\n\nThen I talked to someone who actually built a business around this.\nNot a guru. Not a course seller.\nA person doing the work, quietly, profitably.\n\nThey told me one thing:\n\n"Stop optimizing. Start listening."\n\nSo I did.\n\nI stopped posting what I thought people wanted.\nStarted sharing what was actually on my mind.\n\nEngagement tripled in 6 weeks.\nNot because I found a hack.\nBecause I stopped pretending.\n\nThe gap between what people teach\nand what actually works is massive.\n\nDrop a "real" if you've felt this too.`,
 
-    'personal experience': `6 months ago, I thought I understood this topic.\n\nI was dead wrong.\n\nHere's what 6 months of deep work taught me:\n\nMonth 1: Excitement.\nEverything felt possible.\nI was reading, studying, consuming.\n\nMonth 2: Confusion.\nThe more I learned, the less I knew.\nContradictions everywhere.\n\nMonth 3: Frustration.\nNothing was working the way "they" said it would.\nI almost quit.\n\nMonth 4: Breakthrough.\nOne conversation changed everything.\nA mentor said: "Stop trying to be right. Start trying to be useful."\n\nMonth 5: Clarity.\nI stripped away everything that didn't matter.\nFocused on the 20% that drove 80% of results.\n\nMonth 6: Results.\nNot overnight. Not viral.\nBut real, compounding, sustainable progress.\n\nThe lesson?\n\nEveryone wants the Month 6 results.\nNobody wants the Month 3 frustration.\n\nBut you don't get one without the other.\n\n—\n\nWhat's your Month 3 moment? Share below. 👇`,
+    'personal experience': `6 months. 47 conversations. 1 painful truth.\n\nNobody warned me about this.\n\nWhen I started digging into this topic,\nI expected to find clear answers.\n\nI found confusion instead.\n\nMonth 1, I was reading everything.\nMonth 2, nothing made sense together.\nMonth 3, I almost dropped it.\n\nThen during a call with a client in Parramatta,\nthey said something that rewired my thinking.\n\n"We don't need more information.\nWe need someone who's done it to just show us."\n\nThat hit different.\n\nI stopped researching.\nStarted documenting what I was actually doing.\nShared it raw, unpolished, week by week.\n\nThe response was wild.\nPeople didn't want perfect.\nThey wanted proof it was happening in real time.\n\nSometimes the best content strategy\nis just telling the truth about the process.\n\nWhat's something you learned the hard way this year?`,
 
-    'listicle / myth-busting': `Here are 5 things nobody tells you:\n\n1. It's harder than it looks.\n\nThe people making it look easy?\nThey're not showing you the 100 failed attempts.\nThe late nights. The self-doubt.\n\n2. There is no "right time."\n\nYou'll never feel ready.\nThe best time to start was yesterday.\nThe second best time is now.\n\n3. Consistency beats talent.\n\nEvery. Single. Time.\n\nI've watched talented people quit\nwhile consistent people won.\n\n4. Your network matters more than your knowledge.\n\nYou are the average of the 5 people\nyou spend the most time with.\nChoose wisely.\n\n5. Failure is the curriculum.\n\nNot the obstacle.\nNot the enemy.\nThe actual path.\n\nEvery successful person I know\nhas a graveyard of failed attempts.\n\nThe difference?\nThey treated each one as a lesson,\nnot a verdict.\n\n—\n\nWhich one hit hardest? Let me know. 👇`,
+    'problem-solution': `I watched 3 businesses fail at this in the last year.\n\nAll 3 made the same mistake.\n\nThey spent thousands on strategy.\nHired the right people.\nHad the budget.\n\nBut they skipped the one thing that matters.\n\nActually talking to their audience.\n\nNot surveys. Not analytics dashboards.\nReal conversations with real people.\n\nOne of them was a mortgage broker in Sydney.\nSpent $8K on ads, got zero leads.\n\nWe sat down, called 15 past clients.\nAsked one question: "Why did you choose us?"\n\nThe answer? It wasn't the rates.\nIt was a Google review from 2023.\n\nChanged the entire strategy in one afternoon.\n\nStop guessing what your audience wants.\nGo ask them.\n\nTag someone who needs to hear this.`,
 
-    'future prediction': `Mark my words.\n\nIn 2 years, this landscape won't look anything like it does today.\n\nHere's why:\n\nThe current approach is broken.\n\nWe're optimizing for metrics that don't matter.\nWe're building systems that don't scale.\nWe're following playbooks that are already outdated.\n\nWhat's coming next:\n\n→ Personalization will replace mass approaches\n→ Quality will beat quantity (finally)\n→ Human connection will become the ultimate differentiator\n→ The "experts" who can't adapt will become irrelevant\n\nThe companies that survive?\n\nThey'll be the ones that:\n• Started adapting 6 months ago\n• Built real relationships, not just transactions\n• Invested in people, not just technology\n\nThe question isn't IF things will change.\n\nIt's whether you'll be ready when they do.\n\n—\n\nAre you preparing for what's next?\nOr still playing yesterday's game? 👇`,
+    'future prediction': `In 18 months, half the people doing this will be irrelevant.\n\nNot because they're bad at it.\n\nBecause they won't adapt.\n\nI've worked with 50+ businesses over the last 3 years.\nThe pattern is always the same.\n\nWhen things are working, nobody wants to change.\nWhen things stop working, it's already too late.\n\nWhat's shifting right now:\n\nGeneric content is dying.\nPersonal brands are replacing company pages.\nAI is making average content free — which means\nonly specific, experience-based content survives.\n\nThe businesses I see winning in 2028:\n\nThey're building trust now.\nSharing real numbers.\nShowing process, not just results.\n\nThe ones who treat content as an afterthought?\nThey'll wonder what happened.\n\nAre you building for now or for what's coming?`,
 
-    'vulnerability / story': `I need to tell you about my biggest failure.\n\nIt's not something I talk about often.\n\nBut I think it's important.\n\n3 years ago, I had everything figured out.\nOr so I thought.\n\nI had the plan.\nThe strategy.\nThe confidence.\n\nAnd then it all fell apart.\n\nNot slowly. Not gradually.\nOvernight.\n\nI remember sitting in my car,\nstaring at the dashboard,\nwondering what went wrong.\n\nThe answer?\nEverything.\n\nI was so focused on the destination\nthat I forgot to check the map.\n\nI was so busy being "right"\nthat I stopped listening.\n\nI was so afraid of looking weak\nthat I never asked for help.\n\nThat failure taught me 3 things:\n\n1. Vulnerability is not weakness.\nIt's the ultimate strength.\n\n2. Asking for help is not failure.\nIt's intelligence.\n\n3. The worst thing that can happen\nis rarely as bad as you imagine.\n\nToday, I'm grateful for that moment.\n\nBecause without it,\nI wouldn't be here writing this.\n\n—\n\nWhat failure shaped who you are today? 👇`,
+    'vulnerability / story': `I lost $12,000 on a single bad decision.\n\nWorst part? I saw it coming.\n\nBack in 2023, a brand offered me a deal.\nGood money. Easy work. Quick turnaround.\n\nEverything about it felt off.\nThe brief was vague.\nThe owner kept changing scope.\n\nBut I needed the cash.\nI was juggling uni fees — $110K total —\nworking weekends, driving trucks between shoots.\n\nSo I said yes.\n\nThree weeks in, they ghosted.\nNo payment. No response. Nothing.\n\n$12K in production costs. Out of my pocket.\n\nI sat in my car outside the office for 20 minutes.\nJust staring at the steering wheel.\n\nBut that moment taught me something\nI couldn't learn from any course.\n\nNever trade your instinct for quick money.\n\nIf it feels wrong, it is wrong.\nEvery time.\n\nHave you ever ignored your gut and regretted it?`,
   };
 
   const content = posts[idea.angle] || posts['contrarian'];

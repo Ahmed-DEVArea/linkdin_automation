@@ -24,7 +24,7 @@ export async function generateIdeas(
   const response = await callLLM({
     provider,
     prompt,
-    systemPrompt: 'You are a LinkedIn content strategist. Return ONLY valid JSON.',
+    systemPrompt: 'You are a LinkedIn content strategist for Adit — a raw, human brand. Generate ideas that feel like a real person thinking. No ChatGPT-sounding phrases. Return ONLY valid JSON.',
     temperature: 0.8,
     apiKey,
   });
@@ -55,7 +55,7 @@ export async function generatePost(
     provider,
     prompt,
     systemPrompt:
-      'You are a LinkedIn ghostwriter. Write raw, authentic posts. Return ONLY the post text.',
+      'You are Adit\'s LinkedIn ghostwriter. Write raw, authentic posts that feel like a real person thinking — never like AI wrote it. No corporate language, no ChatGPT phrases. Return ONLY the post text.',
     temperature: 0.7,
     apiKey,
   });
@@ -84,7 +84,7 @@ export async function refinePost(
     provider,
     prompt,
     systemPrompt:
-      'You are a LinkedIn post editor. Return ONLY the refined post text.',
+      'You are Adit\'s LinkedIn post editor. Make posts sharper and more human — never more polished or corporate. Kill any ChatGPT-sounding phrases. Return ONLY the refined post text.',
     temperature: 0.6,
     apiKey,
   });

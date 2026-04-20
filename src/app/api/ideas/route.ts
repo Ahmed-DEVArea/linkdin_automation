@@ -40,14 +40,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ideas, demo: true });
     }
 
-    const ideas = await generateIdeas(
-      body.topic.trim(),
-      body.count || 5,
-      provider,
-      userKey
-    );
-
-    return NextResponse.json({ ideas });
+    try {
+      const ideas = await generateIdeas(
+        body.topic.trim(),
+        body.count || 5,
+        provider,
+        userKey
+      );
+      return NextResponse.json({ ideas });
+    } catch (llmError) {
+      // If auth fails (401, expired key), fall back to demo mode
+      const msg = llmError instanceof Error ? llmError.message : '';
+      if (msg.includes('401') || msg.includes('Authentication') || msg.includes('Unauthorized') || msg.includes('API key')) {
+        console.warn('LLM auth failed, falling back to demo:', msg);
+        const ideas = getMockIdeas(body.topic.trim());
+        return NextResponse.json({ ideas, demo: true, authError: msg });
+      }
+      throw llmError;
+    }
   } catch (error) {
     console.error('Error generating ideas:', error);
     return NextResponse.json(

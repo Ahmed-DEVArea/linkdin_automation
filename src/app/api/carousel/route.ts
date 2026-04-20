@@ -40,15 +40,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ carousel, demo: true });
     }
 
-    const carousel = await generateCarousel(
-      body.post.topic,
-      body.post.content,
-      body.slideCount || 8,
-      provider,
-      userKey
-    );
-
-    return NextResponse.json({ carousel });
+    try {
+      const carousel = await generateCarousel(
+        body.post.topic,
+        body.post.content,
+        body.slideCount || 8,
+        provider,
+        userKey
+      );
+      return NextResponse.json({ carousel });
+    } catch (llmError) {
+      const msg = llmError instanceof Error ? llmError.message : '';
+      if (msg.includes('401') || msg.includes('Authentication') || msg.includes('Unauthorized') || msg.includes('API key')) {
+        console.warn('LLM auth failed, falling back to demo carousel:', msg);
+        const carousel = getMockCarousel(body.post.topic, body.post.content);
+        return NextResponse.json({ carousel, demo: true, authError: msg });
+      }
+      throw llmError;
+    }
   } catch (error) {
     console.error('Error generating carousel:', error);
     return NextResponse.json(

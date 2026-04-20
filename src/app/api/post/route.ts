@@ -40,14 +40,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ post, demo: true });
     }
 
-    const post = await generatePost(
-      body.idea,
-      provider,
-      body.customInstructions,
-      userKey
-    );
-
-    return NextResponse.json({ post });
+    try {
+      const post = await generatePost(
+        body.idea,
+        provider,
+        body.customInstructions,
+        userKey
+      );
+      return NextResponse.json({ post });
+    } catch (llmError) {
+      const msg = llmError instanceof Error ? llmError.message : '';
+      if (msg.includes('401') || msg.includes('Authentication') || msg.includes('Unauthorized') || msg.includes('API key')) {
+        console.warn('LLM auth failed, falling back to demo:', msg);
+        const post = getMockPost(body.idea);
+        return NextResponse.json({ post, demo: true, authError: msg });
+      }
+      throw llmError;
+    }
   } catch (error) {
     console.error('Error generating post:', error);
     return NextResponse.json(
@@ -83,14 +92,24 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ content: shuffled.join('\n'), demo: true });
     }
 
-    const refined = await refinePost(
-      body.content,
-      body.instructions || '',
-      provider,
-      userKey
-    );
-
-    return NextResponse.json({ content: refined });
+    try {
+      const refined = await refinePost(
+        body.content,
+        body.instructions || '',
+        provider,
+        userKey
+      );
+      return NextResponse.json({ content: refined });
+    } catch (llmError) {
+      const msg = llmError instanceof Error ? llmError.message : '';
+      if (msg.includes('401') || msg.includes('Authentication') || msg.includes('Unauthorized') || msg.includes('API key')) {
+        console.warn('LLM auth failed for refine, falling back to demo:', msg);
+        const lines = body.content.split('\n');
+        const shuffled = [lines[0], '', ...lines.slice(1)];
+        return NextResponse.json({ content: shuffled.join('\n'), demo: true, authError: msg });
+      }
+      throw llmError;
+    }
   } catch (error) {
     console.error('Error refining post:', error);
     return NextResponse.json(

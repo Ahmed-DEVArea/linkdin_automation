@@ -3,7 +3,14 @@
 // ============================================
 
 import { create } from 'zustand';
-import type { AppState, ContentIdea, LinkedInPost, LLMProvider, UserApiKeys } from '@/types';
+import type {
+  AppState,
+  ContentIdea,
+  LinkedInPost,
+  LLMProvider,
+  NotionConfig,
+  UserApiKeys,
+} from '@/types';
 
 // Load API keys from localStorage
 function loadApiKeys(): UserApiKeys {
@@ -21,6 +28,25 @@ function saveApiKeys(keys: UserApiKeys) {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem('content-engine-api-keys', JSON.stringify(keys));
+  } catch {
+    // silently fail
+  }
+}
+
+function loadNotionConfig(): NotionConfig {
+  if (typeof window === 'undefined') return {};
+  try {
+    const stored = localStorage.getItem('content-engine-notion-config');
+    return stored ? JSON.parse(stored) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveNotionConfig(config: NotionConfig) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem('content-engine-notion-config', JSON.stringify(config));
   } catch {
     // silently fail
   }
@@ -62,9 +88,22 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ apiKeys: newKeys });
   },
 
+  // Notion connection
+  notionConfig: loadNotionConfig(),
+  setNotionConfig: (config: NotionConfig) => {
+    const nextConfig = {
+      apiKey: config.apiKey?.trim() || undefined,
+      databaseId: config.databaseId?.trim() || undefined,
+    };
+    saveNotionConfig(nextConfig);
+    set({ notionConfig: nextConfig });
+  },
+
   // Settings modal
   showSettings: false,
   setShowSettings: (show: boolean) => set({ showSettings: show }),
+  showNotionSettings: false,
+  setShowNotionSettings: (show: boolean) => set({ showNotionSettings: show }),
 
   // Loading states
   isGeneratingIdeas: false,

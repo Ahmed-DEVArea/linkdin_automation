@@ -1,23 +1,24 @@
 'use client';
 
 // ============================================
-// ProviderSwitch — Toggle between LLM providers
+// ProviderSwitch - Toggle between visible LLM providers
 // ============================================
 
 import { useAppStore } from '@/store/useAppStore';
 import type { LLMProvider } from '@/types';
 
-const providers: { id: LLMProvider; label: string; hint?: string }[] = [
-  { id: 'kimi', label: 'Kimi K2.5', hint: 'Free' },
-  { id: 'claude', label: 'Claude' },
-  { id: 'openai', label: 'GPT-4o' },
-  { id: 'gemini', label: 'Gemini' },
+const providers: { id: LLMProvider; label: string; visible: boolean }[] = [
+  { id: 'kimi', label: 'Kimi K2.5', visible: true },
+  { id: 'claude', label: 'Claude', visible: false },
+  { id: 'openai', label: 'GPT-4o', visible: false },
+  { id: 'gemini', label: 'Gemini', visible: false },
 ];
+
+const visibleProviders = providers.filter((provider) => provider.visible);
 
 export function ProviderSwitch() {
   const { llmProvider, setLLMProvider, apiKeys } = useAppStore();
 
-  // Map provider id to apiKeys key
   const keyMap: Record<LLMProvider, keyof typeof apiKeys> = {
     kimi: 'kimi',
     claude: 'anthropic',
@@ -27,8 +28,8 @@ export function ProviderSwitch() {
 
   return (
     <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 rounded-lg p-1">
-      {providers.map((p) => {
-        const hasKey = !!(apiKeys[keyMap[p.id]]);
+      {visibleProviders.map((p) => {
+        const hasKey = !!apiKeys[keyMap[p.id]];
         return (
           <button
             key={p.id}

@@ -1,111 +1,111 @@
 // ============================================
-// Notion Service — Save posts to Notion database
-// Auto-detects database schema & adapts properties
+// Notion Service - Save posts to Notion database
+// Auto-detects database schema and adapts properties
 // ============================================
 
 import { Client } from '@notionhq/client';
-import type { LinkedInPost } from '@/types';
+import type { LinkedInPost, NotionConfig } from '@/types';
 
-let notionClient: Client | null = null;
+let envNotionClient: Client | null = null;
 
-function getNotionClient(): Client {
-  if (!notionClient) {
-    const auth = process.env.NOTION_API_KEY;
-    if (!auth) throw new Error('NOTION_API_KEY is not set');
-    notionClient = new Client({ auth });
+function getNotionClient(apiKey?: string): Client {
+  const auth = apiKey || process.env.NOTION_API_KEY;
+  if (!auth) throw new Error('NOTION_API_KEY is not set');
+
+  if (apiKey) return new Client({ auth });
+
+  if (!envNotionClient) {
+    envNotionClient = new Client({ auth });
   }
-  return notionClient;
+  return envNotionClient;
 }
 
-function getDatabaseId(): string {
-  const id = process.env.NOTION_DATABASE_ID;
+function getDatabaseId(databaseId?: string): string {
+  const id = databaseId || process.env.NOTION_DATABASE_ID;
   if (!id) throw new Error('NOTION_DATABASE_ID is not set');
   return id;
 }
 
-// Cache database schema to avoid repeated lookups
-let cachedSchema: Record<string, string> | null = null;
+const cachedSchemas = new Map<string, Record<string, string>>();
 
-/**
- * Fetch the database schema and return a map of property names → types
- */
-async function getDatabaseSchema(notion: Client, databaseId: string): Promise<Record<string, string>> {
+async function getDatabaseSchema(
+  notion: Client,
+  databaseId: string
+): Promise<Record<string, string>> {
+  const cachedSchema = cachedSchemas.get(databaseId);
   if (cachedSchema) return cachedSchema;
 
   try {
     const db = await notion.databases.retrieve({ database_id: databaseId });
-    const props = (db as unknown as { properties?: Record<string, { type: string }> | null }).properties;
-    
+    const props = (db as unknown as {
+      properties?: Record<string, { type: string }> | null;
+    }).properties;
+
     if (!props || typeof props !== 'object') {
-      console.warn('Notion database returned no properties — using minimal schema');
-      // Return a minimal schema with just a title property
-      cachedSchema = { 'Name': 'title' };
-      return cachedSchema;
+      const fallback = { Name: 'title' };
+      cachedSchemas.set(databaseId, fallback);
+      return fallback;
     }
 
     const schema: Record<string, string> = {};
     for (const [name, prop] of Object.entries(props)) {
-      if (prop && prop.type) {
+      if (prop?.type) {
         schema[name] = prop.type;
       }
     }
-    
-    // Ensure we have at least a title property
+
     if (!Object.values(schema).includes('title')) {
-      schema['Name'] = 'title';
+      schema.Name = 'title';
     }
-    
-    cachedSchema = schema;
+
+    cachedSchemas.set(databaseId, schema);
     return schema;
   } catch (error) {
     console.error('Failed to retrieve database schema:', error);
-    // Return minimal fallback schema so saving can still attempt to work
-    cachedSchema = { 'Name': 'title' };
-    return cachedSchema;
+    const fallback = { Name: 'title' };
+    cachedSchemas.set(databaseId, fallback);
+    return fallback;
   }
 }
 
-/**
- * Find the title property name in the database (could be "Name", "Topic", etc.)
- */
 function findTitleProperty(schema: Record<string, string>): string {
   for (const [name, type] of Object.entries(schema)) {
     if (type === 'title') return name;
   }
-  return 'Name'; // Notion default
+  return 'Name';
 }
 
-export async function saveToNotion(post: LinkedInPost): Promise<{ pageId: string; url: string }> {
-  const notion = getNotionClient();
-  const databaseId = getDatabaseId();
+export async function saveToNotion(
+  post: LinkedInPost,
+  config?: NotionConfig
+): Promise<{ pageId: string; url: string }> {
+  const notion = getNotionClient(config?.apiKey);
+  const databaseId = getDatabaseId(config?.databaseId);
 
-  // Discover the actual database schema
   const schema = await getDatabaseSchema(notion, databaseId);
   const titleProp = findTitleProperty(schema);
 
-  // Calculate metadata
   const wordCount = post.content.split(/\s+/).filter(Boolean).length;
   const hasCarousel = !!post.carousel;
   const hasImage = !!post.imageUrl;
   const contentType = hasCarousel ? 'Post + Carousel' : 'Post';
 
-  // Build properties — only include properties that exist in the database
   const properties: Record<string, unknown> = {
-    // Title property (required — use whatever the DB calls it)
     [titleProp]: {
       title: [{ text: { content: post.topic } }],
     },
   };
 
-  // Conditionally add optional properties if they exist in the schema
-  if (schema['Date'] === 'date') {
-    properties['Date'] = { date: { start: post.createdAt.split('T')[0] } };
+  if (schema.Date === 'date') {
+    properties.Date = { date: { start: post.createdAt.split('T')[0] } };
   }
-  if (schema['Status'] === 'select') {
-    properties['Status'] = { select: { name: post.status === 'saved' ? 'Published' : 'Draft' } };
+  if (schema.Status === 'select') {
+    properties.Status = {
+      select: { name: post.status === 'saved' ? 'Published' : 'Draft' },
+    };
   }
-  if (schema['Type'] === 'select') {
-    properties['Type'] = { select: { name: contentType } };
+  if (schema.Type === 'select') {
+    properties.Type = { select: { name: contentType } };
   }
   if (schema['Word Count'] === 'number') {
     properties['Word Count'] = { number: wordCount };
@@ -120,7 +120,6 @@ export async function saveToNotion(post: LinkedInPost): Promise<{ pageId: string
     properties['Image URL'] = { url: post.imageUrl };
   }
 
-  // Build children blocks (post content — always works regardless of schema)
   const children: unknown[] = [
     {
       object: 'block',
@@ -143,7 +142,6 @@ export async function saveToNotion(post: LinkedInPost): Promise<{ pageId: string
     },
   ];
 
-  // Continuation block for long content
   if (post.content.length > 2000) {
     children.push({
       object: 'block',
@@ -159,14 +157,12 @@ export async function saveToNotion(post: LinkedInPost): Promise<{ pageId: string
     });
   }
 
-  // Divider
   children.push({
     object: 'block',
     type: 'divider',
     divider: {},
   });
 
-  // Carousel HTML if present
   if (post.carousel?.htmlContent) {
     children.push(
       {
@@ -194,7 +190,6 @@ export async function saveToNotion(post: LinkedInPost): Promise<{ pageId: string
     );
   }
 
-  // Image if present
   if (post.imageUrl) {
     children.push(
       {
@@ -225,22 +220,24 @@ export async function saveToNotion(post: LinkedInPost): Promise<{ pageId: string
 
   return {
     pageId: response.id,
-    url: (response as unknown as { url: string }).url || `https://notion.so/${response.id.replace(/-/g, '')}`,
+    url:
+      (response as unknown as { url: string }).url ||
+      `https://notion.so/${response.id.replace(/-/g, '')}`,
   };
 }
 
-// Verify Notion connection and database access
-export async function verifyNotionConnection(): Promise<{
+export async function verifyNotionConnection(config?: NotionConfig): Promise<{
   connected: boolean;
   databaseName?: string;
   error?: string;
 }> {
   try {
-    const notion = getNotionClient();
-    const databaseId = getDatabaseId();
+    const notion = getNotionClient(config?.apiKey);
+    const databaseId = getDatabaseId(config?.databaseId);
 
     const db = await notion.databases.retrieve({ database_id: databaseId });
-    const title = (db as unknown as { title: Array<{ plain_text: string }> }).title;
+    const title = (db as unknown as { title: Array<{ plain_text: string }> })
+      .title;
 
     return {
       connected: true,

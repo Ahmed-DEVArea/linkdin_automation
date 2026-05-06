@@ -1,18 +1,28 @@
 'use client';
 
 // ============================================
-// TopicInput — Clean minimal input screen
+// TopicInput - Clean minimal input screen
 // ============================================
 
 import { useState } from 'react';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight, Database, Sparkles } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { ProviderSwitch } from './ProviderSwitch';
+import { NotionSettingsModal } from './NotionSettings';
 import { getApiKeyForProvider } from '@/lib/client-utils';
 
 export function TopicInput() {
-  const { topic, setTopic, setIdeas, setStep, setLoading, llmProvider, apiKeys } =
-    useAppStore();
+  const {
+    topic,
+    setTopic,
+    setIdeas,
+    setStep,
+    setLoading,
+    llmProvider,
+    apiKeys,
+    notionConfig,
+    setShowNotionSettings,
+  } = useAppStore();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -58,20 +68,23 @@ export function TopicInput() {
     }
   };
 
+  const notionConnected =
+    !!notionConfig.apiKey?.trim() && !!notionConfig.databaseId?.trim();
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
+      <NotionSettingsModal />
+
       <div className="w-full max-w-2xl px-6">
-        {/* Logo / Brand */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-white tracking-tight">
-            Content Engine
+            LinkedIn ContentGeneration
           </h1>
           <p className="text-zinc-500 mt-3 text-lg">
             Generate LinkedIn posts that feel human.
           </p>
         </div>
 
-        {/* Input Area */}
         <div className="relative">
           <textarea
             value={topic}
@@ -83,7 +96,6 @@ export function TopicInput() {
             disabled={isLoading}
           />
 
-          {/* Examples */}
           <div className="flex flex-wrap gap-2 mt-4">
             {[
               'AI replacing jobs',
@@ -102,34 +114,46 @@ export function TopicInput() {
           </div>
         </div>
 
-        {/* Error */}
         {error && (
           <div className="mt-4 px-4 py-3 bg-red-950/50 border border-red-900 rounded-lg text-red-400 text-sm">
             {error}
           </div>
         )}
 
-        {/* Actions */}
-        <div className="mt-8 flex items-center justify-between">
+        <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <ProviderSwitch />
 
-          <button
-            onClick={handleGenerate}
-            disabled={!topic.trim() || isLoading}
-            className="group flex items-center gap-2 px-6 py-3 bg-white text-black font-medium rounded-lg hover:bg-zinc-200 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-          >
-            {isLoading ? (
-              <>
-                <Sparkles className="w-4 h-4 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                Generate Ideas
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-              </>
-            )}
-          </button>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <button
+              onClick={() => setShowNotionSettings(true)}
+              className={`flex items-center justify-center gap-2 px-5 py-3 font-medium rounded-lg border transition-all ${
+                notionConnected
+                  ? 'text-green-300 bg-green-950/30 border-green-900 hover:border-green-700'
+                  : 'text-zinc-300 bg-zinc-900 border-zinc-800 hover:text-white hover:border-zinc-600'
+              }`}
+            >
+              <Database className="w-4 h-4" />
+              {notionConnected ? 'Notion Connected' : 'Connect Notion'}
+            </button>
+
+            <button
+              onClick={handleGenerate}
+              disabled={!topic.trim() || isLoading}
+              className="group flex items-center justify-center gap-2 px-6 py-3 bg-white text-black font-medium rounded-lg hover:bg-zinc-200 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              {isLoading ? (
+                <>
+                  <Sparkles className="w-4 h-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  Generate Ideas
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>

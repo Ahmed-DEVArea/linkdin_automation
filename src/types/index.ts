@@ -19,6 +19,11 @@ export interface UserApiKeys {
   kimi?: string;
 }
 
+export interface NotionConfig {
+  apiKey?: string;
+  databaseId?: string;
+}
+
 export interface ContentIdea {
   id: string;
   title: string;
@@ -121,6 +126,8 @@ export interface GenerateImageResponse {
 
 export interface SaveToNotionRequest {
   post: LinkedInPost;
+  notionApiKey?: string;
+  notionDatabaseId?: string;
 }
 
 export interface SaveToNotionResponse {
@@ -155,10 +162,16 @@ export interface AppState {
   // API Keys (user-provided, stored in localStorage)
   apiKeys: UserApiKeys;
   setApiKey: (provider: keyof UserApiKeys, key: string) => void;
+
+  // Notion connection (user-provided, stored in localStorage)
+  notionConfig: NotionConfig;
+  setNotionConfig: (config: NotionConfig) => void;
   
   // Settings modal
   showSettings: boolean;
   setShowSettings: (show: boolean) => void;
+  showNotionSettings: boolean;
+  setShowNotionSettings: (show: boolean) => void;
   
   // Loading states
   isGeneratingIdeas: boolean;

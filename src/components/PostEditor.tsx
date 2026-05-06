@@ -1,15 +1,15 @@
 'use client';
 
 // ============================================
-// PostEditor — Edit, enhance, generate assets
+// PostEditor - Edit, enhance, and save content
 // ============================================
 
 import { useState } from 'react';
+import Image from 'next/image';
 import {
   ArrowLeft,
   RefreshCw,
   LayoutGrid,
-  ImageIcon,
   Save,
   Copy,
   Check,
@@ -28,11 +28,11 @@ export function PostEditor() {
     setStep,
     llmProvider,
     apiKeys,
+    notionConfig,
   } = useAppStore();
 
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [isGeneratingCarousel, setIsGeneratingCarousel] = useState(false);
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showCarousel, setShowCarousel] = useState(false);
@@ -98,40 +98,6 @@ export function PostEditor() {
     }
   };
 
-  const handleGenerateImage = async () => {
-    setIsGeneratingImage(true);
-    setError('');
-    try {
-      const res = await fetch('/api/image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          postContent: currentPost.content,
-          provider: llmProvider,
-          apiKey: getApiKeyForProvider(llmProvider, apiKeys),
-        }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Failed to generate image');
-      }
-
-      const data = await res.json();
-      setCurrentPost({
-        ...currentPost,
-        imageUrl: data.imageUrl,
-        imagePrompt: data.prompt,
-      });
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to generate image'
-      );
-    } finally {
-      setIsGeneratingImage(false);
-    }
-  };
-
   const handleSaveToNotion = async () => {
     setIsSaving(true);
     setError('');
@@ -140,7 +106,11 @@ export function PostEditor() {
       const res = await fetch('/api/notion', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ post: currentPost }),
+        body: JSON.stringify({
+          post: currentPost,
+          notionApiKey: notionConfig.apiKey,
+          notionDatabaseId: notionConfig.databaseId,
+        }),
       });
 
       if (!res.ok) {
@@ -154,7 +124,7 @@ export function PostEditor() {
         notionPageId: data.pageId,
         status: 'saved',
       });
-      setSaveSuccess('Saved to Notion successfully!');
+      setSaveSuccess('Saved to Notion successfully');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save');
     } finally {
@@ -168,14 +138,11 @@ export function PostEditor() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const wordCount = currentPost.content
-    .split(/\s+/)
-    .filter(Boolean).length;
+  const wordCount = currentPost.content.split(/\s+/).filter(Boolean).length;
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] py-12 px-6">
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <button
@@ -192,7 +159,6 @@ export function PostEditor() {
           <span className="text-zinc-600 text-sm">{wordCount} words</span>
         </div>
 
-        {/* Messages */}
         {error && (
           <div className="mb-4 px-4 py-3 bg-red-950/50 border border-red-900 rounded-lg text-red-400 text-sm">
             {error}
@@ -204,12 +170,9 @@ export function PostEditor() {
           </div>
         )}
 
-        {/* Main Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Post Editor */}
           <div className="lg:col-span-2">
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-              {/* Editor toolbar */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800">
                 <span className="text-xs text-zinc-600 uppercase tracking-wider">
                   Post
@@ -229,7 +192,6 @@ export function PostEditor() {
                 </div>
               </div>
 
-              {/* Editor */}
               <textarea
                 value={currentPost.content}
                 onChange={(e) => updatePostContent(e.target.value)}
@@ -238,7 +200,6 @@ export function PostEditor() {
               />
             </div>
 
-            {/* Image preview */}
             {currentPost.imageUrl && (
               <div className="mt-4 bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
                 <div className="px-4 py-3 border-b border-zinc-800">
@@ -247,10 +208,13 @@ export function PostEditor() {
                   </span>
                 </div>
                 <div className="p-4">
-                  <img
+                  <Image
                     src={currentPost.imageUrl}
                     alt="Generated"
-                    className="w-full rounded-lg"
+                    width={1200}
+                    height={800}
+                    unoptimized
+                    className="w-full h-auto rounded-lg"
                   />
                   {currentPost.imagePrompt && (
                     <p className="mt-2 text-xs text-zinc-600">
@@ -261,7 +225,6 @@ export function PostEditor() {
               </div>
             )}
 
-            {/* Carousel preview */}
             {currentPost.carousel && (
               <div className="mt-4">
                 <button
@@ -282,7 +245,6 @@ export function PostEditor() {
             )}
           </div>
 
-          {/* Sidebar Actions */}
           <div className="space-y-3">
             <ActionButton
               onClick={handleRegenerate}
@@ -298,13 +260,6 @@ export function PostEditor() {
               label="Generate Carousel"
               sublabel="Create slide deck"
             />
-            <ActionButton
-              onClick={handleGenerateImage}
-              loading={isGeneratingImage}
-              icon={<ImageIcon className="w-4 h-4" />}
-              label="Generate Image"
-              sublabel="AI character photo"
-            />
             <div className="pt-3 border-t border-zinc-800">
               <ActionButton
                 onClick={handleSaveToNotion}
@@ -316,7 +271,6 @@ export function PostEditor() {
               />
             </div>
 
-            {/* Start over */}
             <div className="pt-6">
               <button
                 onClick={() => {
@@ -324,7 +278,7 @@ export function PostEditor() {
                 }}
                 className="w-full text-sm text-zinc-600 hover:text-zinc-400 transition-colors"
               >
-                Start a new post →
+                Start a new post
               </button>
             </div>
           </div>
@@ -334,7 +288,6 @@ export function PostEditor() {
   );
 }
 
-// Action Button Component
 function ActionButton({
   onClick,
   loading,
